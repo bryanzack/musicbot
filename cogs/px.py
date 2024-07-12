@@ -47,6 +47,7 @@ class Pixel(commands.Cog, name="pixel"):
                     # getTopAlbums
                     albums = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopalbums&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&format=json")
                     print(albums.text)
+                    await context.send(albums.text)
 
 
 
