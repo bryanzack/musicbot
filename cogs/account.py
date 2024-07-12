@@ -28,7 +28,7 @@ class Account(commands.Cog, name="account"):
         print(f"id: {id}")
         print(f"fmname: {arg}")
         async with aiosqlite.connect(
-            "C:\\Users\\bryan\\Documents\\musicbot\\database\\database.db"
+            f"{os.path.realpath(os.path.dirname(__file__))}/../database/database.db"
         ) as db:
             async with db.execute(f"SELECT * FROM User WHERE Discord_ID = {id}") as select_cursor:
                 select_rows = await select_cursor.fetchall()
