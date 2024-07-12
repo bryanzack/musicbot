@@ -16,15 +16,15 @@ import aiosqlite
 import os
 
 # Here we name the cog and create a new class for the cog.
-class Pixel(commands.Cog, name="pixel"):
+class Jumble(commands.Cog, name="jumble"):
     def __init__(self, bot) -> None:
         self.bot = bot
 
     # Here you can just add your own commands, you'll always need to provide "self" as first parameter.
 
     @commands.hybrid_command(
-        name="px",
-        description="Gets one of the user's top albums in pixelated form.",
+        name="jumble",
+        description="Album name guessing game",
     )
     async def px(self, context: Context) -> None:
         id = context.author.id
@@ -53,4 +53,4 @@ class Pixel(commands.Cog, name="pixel"):
 
 # And then we finally add the cog to the bot so that it can load, unload, reload and use it's content.
 async def setup(bot) -> None:
-    await bot.add_cog(Pixel(bot))
+    await bot.add_cog(Jumble(bot))
