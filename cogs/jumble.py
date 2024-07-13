@@ -14,6 +14,7 @@ import requests
 import json
 import aiosqlite
 import os
+import random
 
 # Here we name the cog and create a new class for the cog.
 class Jumble(commands.Cog, name="jumble"):
@@ -42,20 +43,42 @@ class Jumble(commands.Cog, name="jumble"):
                 # if user does not exist in database (zero matching records), tell user to link account
                 if (len(select_rows) == 0):
                     await context.send("user does not have last.fm account linked, please link with .link")
-                #user has account linked, we will now run the last.fm api logic
+                # user has account linked, we will now run the last.fm api logic
                 else:
-                    await context.send('user has linked last.fm account,')
-                    albums = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopalbums&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&format=json")
+                    #print(albums)
+                    #print(len(albums['topalbums']['album']))
                     # TODO:
                     # 1.) turn response into navigable json
-                    # 2.) get length of albums array
-                    # 3.) get random number between 0 and that same length
-                    # 4.) use json indexing to grab the randomly picked album
-                    # 5.) get the albums title as a string
-                    # 6.) splice the title into an array of words, with a blank space as the separator
-                    # 7.) shuffle the letters in each word
-                    # 8.) reattach the shuffled words into a string with spaces in their original spots
-                    # 9.) print the shuffled word back to the server
+                    albums = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopalbums&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&format=json").json()
+                    albums_array = albums['topalbums']['album']
+
+                    # 3.) get random album
+                    rand = random.choice(albums_array)
+                    print(rand)
+
+                    # 5.) deserialize relevant json key/values into variables
+                    artist_name =  rand['artist']['name'] 
+                    album_name = rand['name']
+                    playcount = rand['playcount']
+                    rank = rand['@attr']['rank']
+
+                    #print(f"artist: {artist_name}")
+                    print(f"album: {album_name}")
+                    #print(f"playcount: {playcount}")
+                    #print(f"rank: {rank}")
+
+                    # 6.) do shuffle logic
+                    substrings = album_name.split(' ')
+                    shuffled_substrings = []
+                    for substring in substrings:
+                        substring_list = list(substring)
+                        random.shuffle(substring_list)
+                        shuffled_substring = ''.join(substring_list)
+                        shuffled_substrings.append(shuffled_substring)
+                    result_string = ' '.join(shuffled_substrings).upper()
+                    #print(f'shuffled: {result_string}')
+
+                    await context.send(result_string)
 
 
                     #print(albums.text)
