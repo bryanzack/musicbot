@@ -14,7 +14,7 @@ import os
 import platform
 import random
 import sys
-
+import datetime
 import aiosqlite
 import discord
 from discord.ext import commands, tasks
@@ -174,7 +174,7 @@ class DiscordBot(commands.Bot):
         """
         Setup the game status task of the bot.
         """
-        statuses = ["with fucker's balls"]
+        statuses = ["with fucker's balls", "with thing1's balls", "with zane's balls", "with von's balls", "with summer's balls"]
         await self.change_presence(activity=discord.Game(random.choice(statuses)))
 
     @status_task.before_loop
@@ -216,30 +216,37 @@ class DiscordBot(commands.Bot):
 
         guild_id = message.guild.id
         if guild_id in game_states:
-            current_word = game_states[guild_id]['current_word']
-            if message.content.lower() == current_word.lower():
-                await message.add_reaction('✅')
-                if game_states[guild_id]['jumble_task']:
-                    game_states[guild_id]['jumble_task'].cancel()
+            if message.channel.id == game_states[guild_id]['channel']:
+                current_word = game_states[guild_id]['current_word']
+                if message.content.lower() == current_word.lower():
+                    await message.add_reaction('✅')
+                    if game_states[guild_id]['jumble_task']:
+                        game_states[guild_id]['jumble_task'].cancel()
+                        embed = discord.Embed(
+                            color=discord.Color.green(),
+                            type="rich",
+                            description=f'''
+                            **{message.author.name}** got it! It was `{game_states[guild_id]['current_word']}`
+                            '''
+                        )
+                        elapsed = datetime.datetime.now() - game_states[guild_id]['timestamp']
+                        total_seconds = elapsed.total_seconds()
+                        whole_seconds = int(total_seconds)
+                        fractional_seconds = total_seconds - whole_seconds
+                        tenths = int(fractional_seconds * 10000)
 
-                    #embed = game_states[guild_id]['jumble_task']._coro.cr_frame.f_locals['message'].embeds[0]
-                    embed = discord.Embed(
-                        color=discord.Color.green(),
-                        type="rich",
-                        description=f'''
-                        **{message.author.name}** got it! It was `{game_states[guild_id]['current_word']}`
-                        '''
-                    )
-                    embed.set_footer(text='Answered in #.#')
-                    embed.color = discord.Color.green()
-                    await message.channel.send(embed=embed)
-                    #embed.description += f"\n\nCongratulations {message.author.mention}, you guessed the word!"
-                    #await game_states[guild_id]['jumble_task']._coro.cr_frame.f_locals['message'].edit(embed=embed)
+                        embed.set_footer(text=f"Answered in {whole_seconds}.{tenths:1f}".rstrip('0').rstrip('.'))
+                        embed.color = discord.Color.green()
+                        await message.channel.send(embed=embed)
+                        #embed.description += f"\n\nCongratulations {message.author.mention}, you guessed the word!"
+                        #await game_states[guild_id]['jumble_task']._coro.cr_frame.f_locals['message'].edit(embed=embed)
 
 
-                game_states.pop(guild_id, None)
+                    game_states.pop(guild_id, None)
+                else:
+                    await message.add_reaction('❌')
             else:
-                await message.add_reaction('❌')
+                pass
 
         await self.process_commands(message)
 

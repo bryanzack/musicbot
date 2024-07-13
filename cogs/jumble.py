@@ -19,6 +19,7 @@ import os
 import random
 import discord
 import asyncio
+import datetime
 
 # Timer logic
 async def jumble_timer(self,context:Context, guild_id, message:discord.Message,result_string,playcount,rank):
@@ -60,9 +61,15 @@ class Buttons(discord.ui.View):
         await interaction.response.edit_message(embed=embed)
 
     # Give up button
-    @discord.ui.button(label="Give up", style=discord.ButtonStyle.gray, disabled=True)
+    @discord.ui.button(label="Give up", style=discord.ButtonStyle.gray, disabled=False)
     async def give_up(self,interaction:discord.Interaction,button:discord.ui.Button):
-        await interaction.response.send_message("give up logic here")
+        guild_id = interaction.guild_id
+        message_author = game_states[guild_id]['command_author']
+        embed = interaction.message.embeds[0]
+        embed.colour = discord.Color.red()
+        embed.add_field(name=f'**{message_author} gave up!**', value=f"It was **{game_states[guild_id]['current_word']}**")
+        game_states[guild_id]['jumble_task'].cancel()
+        await interaction.response.edit_message(embed=embed)
 
 # Command logic
 class Jumble(commands.Cog, name="jumble"):
@@ -132,8 +139,11 @@ class Jumble(commands.Cog, name="jumble"):
                     message = await context.send(embed=embed, view=Buttons())
 
                     game_states[guild_id] = {
+                        'command_author': context.message.author,
                         'current_word': artist_name,
-                        'jumble_task': asyncio.create_task(jumble_timer(self,context, guild_id, message,result_string,playcount,rank))
+                        'jumble_task': asyncio.create_task(jumble_timer(self,context, guild_id, message,result_string,playcount,rank)),
+                        'timestamp': datetime.datetime.now(),
+                        'channel': context.channel.id
                     }
 
                     # 8.) Create game state for server
