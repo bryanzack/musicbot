@@ -23,7 +23,7 @@ import asyncio
 # Timer logic
 async def jumble_timer(self,context:Context, guild_id, message:discord.Message,result_string,playcount,rank):
     try:
-        await asyncio.sleep(5)
+        await asyncio.sleep(25)
         if guild_id in game_states:
             embed = discord.Embed(
                 title=f"`{result_string}`",
@@ -97,16 +97,18 @@ class Jumble(commands.Cog, name="jumble"):
                 else:
                     # TODO:
                     # 1.) turn response into navigable json
+                    artists = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopartists&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&format=json").json()
                     albums = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopalbums&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&format=json").json()
                     albums_array = albums['topalbums']['album']
+                    artists_array = artists['topartists']['artist']
+                    
 
                     # 3.) get random album
-                    rand = random.choice(albums_array)
+                    rand = random.choice(artists_array)
                     print(rand)
 
                     # 5.) deserialize relevant json key/values into variables
-                    artist_name =  rand['artist']['name'] 
-                    album_name = rand['name']
+                    artist_name =  rand['name']
                     playcount = rand['playcount']
                     rank = rand['@attr']['rank']
 
