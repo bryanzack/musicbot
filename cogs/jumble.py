@@ -8,6 +8,7 @@ Version: 6.1.0
 """
 
 from state import game_states
+from helpers import shuffleString
 
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -46,17 +47,20 @@ class Buttons(discord.ui.View):
         super().__init__(timeout=timeout)
     
     # Add hint button
-    @discord.ui.button(label="Add hint", style=discord.ButtonStyle.gray)
+    @discord.ui.button(label="Add hint", style=discord.ButtonStyle.gray, disabled=True)
     async def add_hint(self,interaction:discord.Interaction,button:discord.ui.Button):
         await interaction.response.send_message("Add hint logic now")
 
     # Reshuffle button
     @discord.ui.button(label="Reshuffle", style=discord.ButtonStyle.gray)
     async def reshuffle(self,interaction:discord.Interaction,button:discord.ui.Button):
-        await interaction.response.send_message("reshuffle logic now")
+        guild_id = interaction.guild_id
+        embed = interaction.message.embeds[0]
+        embed.title = f"`{shuffleString(game_states[guild_id]['current_word'])}`"
+        await interaction.response.edit_message(embed=embed)
 
     # Give up button
-    @discord.ui.button(label="Give up", style=discord.ButtonStyle.gray)
+    @discord.ui.button(label="Give up", style=discord.ButtonStyle.gray, disabled=True)
     async def give_up(self,interaction:discord.Interaction,button:discord.ui.Button):
         await interaction.response.send_message("give up logic here")
 
@@ -112,15 +116,7 @@ class Jumble(commands.Cog, name="jumble"):
                     #print(f"rank: {rank}")
 
                     # 6.) do shuffle logic
-                    substrings = artist_name.split(' ')
-                    shuffled_substrings = []
-                    for substring in substrings:
-                        substring_list = list(substring)
-                        random.shuffle(substring_list)
-                        shuffled_substring = ''.join(substring_list)
-                        shuffled_substrings.append(shuffled_substring)
-                    result_string = ' '.join(shuffled_substrings).upper()
-                    #print(f'shuffled: {result_string}')
+                    result_string = shuffleString(artist_name)
 
                     # 7.) Create embed
                     embed = discord.Embed(
@@ -131,22 +127,6 @@ class Jumble(commands.Cog, name="jumble"):
                     embed.add_field(name='Jumble - Guess the artist', value=f'You have `{playcount}` plays on this artist \n They are rank `{rank}` on your charts', inline=False) 
                     embed.add_field(name='', value='', inline=False)
                     embed.add_field(name='Add answer', value='Type your answer within 25 seconds to make a guess', inline=False)
-                    '''
-                    embed = discord.Embed(
-                        title=f"```{result_string}```",
-                        description=f
-                        **Jumble - Guess the artist**
-                        You have **{playcount}** plays on this artist
-                        **•** They are rank **{rank}** on your charts
-
-                        **Add answer**
-                        Type your answer within 25 seconds to make a guess
-                        ,
-                        type='rich',
-                        colour=discord.Color.blue()
-                    )
-                    '''
-
                     message = await context.send(embed=embed, view=Buttons())
 
                     game_states[guild_id] = {
