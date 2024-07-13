@@ -6,6 +6,8 @@ Description:
 Version: 6.1.0
 """
 
+from state import game_states
+
 import json
 import logging
 import os
@@ -203,6 +205,7 @@ class DiscordBot(commands.Bot):
         )
 
     async def on_message(self, message: discord.Message) -> None:
+        
         """
         The code in this event is executed every time someone sends a message, with or without the prefix
 
@@ -210,6 +213,34 @@ class DiscordBot(commands.Bot):
         """
         if message.author == self.user or message.author.bot:
             return
+
+        guild_id = message.guild.id
+        if guild_id in game_states:
+            current_word = game_states[guild_id]['current_word']
+            if message.content.lower() == current_word.lower():
+                await message.add_reaction('✅')
+                if game_states[guild_id]['jumble_task']:
+                    game_states[guild_id]['jumble_task'].cancel()
+
+                    #embed = game_states[guild_id]['jumble_task']._coro.cr_frame.f_locals['message'].embeds[0]
+                    embed = discord.Embed(
+                        color=discord.Color.green(),
+                        type="rich",
+                        description=f'''
+                        **{message.author.name}** got it! It was `{game_states[guild_id]['current_word']}`
+                        '''
+                    )
+                    embed.set_footer(text='Answered in #.#')
+                    embed.color = discord.Color.green()
+                    await message.channel.send(embed=embed)
+                    #embed.description += f"\n\nCongratulations {message.author.mention}, you guessed the word!"
+                    #await game_states[guild_id]['jumble_task']._coro.cr_frame.f_locals['message'].edit(embed=embed)
+
+
+                game_states.pop(guild_id, None)
+            else:
+                await message.add_reaction('❌')
+
         await self.process_commands(message)
 
     async def on_command_completion(self, context: Context) -> None:

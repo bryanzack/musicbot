@@ -7,17 +7,53 @@ Description:
 Version: 6.1.0
 """
 
+from state import game_states
+
 from discord.ext import commands
 from discord.ext.commands import Context
-
 import requests
 import json
 import aiosqlite
 import os
 import random
-import discord.embeds
+import discord
+import asyncio
 
-# Here we name the cog and create a new class for the cog.
+# Timer logic
+async def jumble_timer(self,context:Context, guild_id, message:discord.Message):
+    try:
+        await asyncio.sleep(5)
+        if guild_id in game_states:
+            embed = message.embeds[0]
+            embed.color = discord.Color.red()
+            embed.description += f"\n\nTime's up! The correct word was **{game_states[guild_id]['current_word']}**"
+            await message.edit(embed=embed)
+    except asyncio.CancelledError:
+        pass
+    finally:
+        game_states.pop(guild_id, None)
+
+# Button logic
+class Buttons(discord.ui.View):
+    def __init__(self, *, timeout=180):
+        super().__init__(timeout=timeout)
+    
+    # Add hint button
+    @discord.ui.button(label="Add hint", style=discord.ButtonStyle.gray)
+    async def add_hint(self,interaction:discord.Interaction,button:discord.ui.Button):
+        await interaction.response.send_message("Add hint logic now")
+
+    # Reshuffle button
+    @discord.ui.button(label="Reshuffle", style=discord.ButtonStyle.gray)
+    async def reshuffle(self,interaction:discord.Interaction,button:discord.ui.Button):
+        await interaction.response.send_message("reshuffle logic now")
+
+    # Give up button
+    @discord.ui.button(label="Give up", style=discord.ButtonStyle.gray)
+    async def give_up(self,interaction:discord.Interaction,button:discord.ui.Button):
+        await interaction.response.send_message("give up logic here")
+
+# Command logic
 class Jumble(commands.Cog, name="jumble"):
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -29,7 +65,9 @@ class Jumble(commands.Cog, name="jumble"):
         description="Album name guessing game",
     )
     # when someone types the .jumble command, do the following, command prefix is changed in config.json file
-    async def px(self, context: Context) -> None:
+    async def jumble(self, context: Context) -> None:
+        guild_id = context.guild.id
+
         id = context.author.id
         # Attempt to find local sqlite3 database
         # 'with' means it will auto close the connection on fail, no need to close manually
@@ -61,13 +99,13 @@ class Jumble(commands.Cog, name="jumble"):
                     playcount = rand['playcount']
                     rank = rand['@attr']['rank']
 
-                    #print(f"artist: {artist_name}")
-                    print(f"album: {album_name}")
+                    print(f"artist: {artist_name}")
+                    #print(f"album: {album_name}")
                     #print(f"playcount: {playcount}")
                     #print(f"rank: {rank}")
 
                     # 6.) do shuffle logic
-                    substrings = album_name.split(' ')
+                    substrings = artist_name.split(' ')
                     shuffled_substrings = []
                     for substring in substrings:
                         substring_list = list(substring)
@@ -78,21 +116,28 @@ class Jumble(commands.Cog, name="jumble"):
                     #print(f'shuffled: {result_string}')
 
                     # 7.) Create embed
-                    asdf = discord.Embed(
+                    embed = discord.Embed(
                         title=f"```{result_string}```",
                         description=f'''
                         **Jumble - Guess the artist**
-                        **•**\tYou have **{playcount}** plays on this artist
-                        **•**\tThey are rank **{rank}** on your charts
+                        **•** You have **{playcount}** plays on this artist
+                        **•** They are rank **{rank}** on your charts
+
+                        **Add answer**
+                        Type your answer within 25 seconds to make a guess
                         ''',
                         type='rich',
-                        colour=0x3498db
+                        colour=discord.Color.blue()
                     )
-                    await context.send(embed=asdf)
 
+                    message = await context.send(embed=embed, view=Buttons())
 
-                    #print(albums.text)
-                    #await context.send(albums.text)
+                    game_states[guild_id] = {
+                        'current_word': artist_name,
+                        'jumble_task': asyncio.create_task(jumble_timer(self,context, guild_id, message))
+                    }
+
+                    # 8.) Create game state for server
 
 
 
