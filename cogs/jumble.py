@@ -20,13 +20,20 @@ import discord
 import asyncio
 
 # Timer logic
-async def jumble_timer(self,context:Context, guild_id, message:discord.Message):
+async def jumble_timer(self,context:Context, guild_id, message:discord.Message,result_string,playcount,rank):
     try:
         await asyncio.sleep(5)
         if guild_id in game_states:
-            embed = message.embeds[0]
-            embed.color = discord.Color.red()
-            embed.description += f"\n\nTime's up! The correct word was **{game_states[guild_id]['current_word']}**"
+            embed = discord.Embed(
+                title=f"`{result_string}`",
+                type='rich',
+                colour=discord.Color.red()
+            )
+            embed.add_field(name='Jumble - Guess the artist', value=f'You have `{playcount}` plays on this artist \n They are rank `{rank}` on your charts', inline=False) 
+            embed.add_field(name='', value='', inline=False)
+            embed.add_field(name='Add answer', value='Type your answer within 25 seconds to make a guess', inline=False)
+            embed.add_field(name=f"Time's up! The correct word was **{game_states[guild_id]['current_word']}**", value='', inline=False)
+            #embed = message.embeds[0]
             await message.edit(embed=embed)
     except asyncio.CancelledError:
         pass
@@ -117,24 +124,34 @@ class Jumble(commands.Cog, name="jumble"):
 
                     # 7.) Create embed
                     embed = discord.Embed(
+                        title=f"`{result_string}`",
+                        type='rich',
+                        colour=discord.Color.blue()
+                    )
+                    embed.add_field(name='Jumble - Guess the artist', value=f'You have `{playcount}` plays on this artist \n They are rank `{rank}` on your charts', inline=False) 
+                    embed.add_field(name='', value='', inline=False)
+                    embed.add_field(name='Add answer', value='Type your answer within 25 seconds to make a guess', inline=False)
+                    '''
+                    embed = discord.Embed(
                         title=f"```{result_string}```",
-                        description=f'''
+                        description=f
                         **Jumble - Guess the artist**
-                        **•** You have **{playcount}** plays on this artist
+                        You have **{playcount}** plays on this artist
                         **•** They are rank **{rank}** on your charts
 
                         **Add answer**
                         Type your answer within 25 seconds to make a guess
-                        ''',
+                        ,
                         type='rich',
                         colour=discord.Color.blue()
                     )
+                    '''
 
                     message = await context.send(embed=embed, view=Buttons())
 
                     game_states[guild_id] = {
                         'current_word': artist_name,
-                        'jumble_task': asyncio.create_task(jumble_timer(self,context, guild_id, message))
+                        'jumble_task': asyncio.create_task(jumble_timer(self,context, guild_id, message,result_string,playcount,rank))
                     }
 
                     # 8.) Create game state for server
