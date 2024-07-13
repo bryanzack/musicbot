@@ -15,6 +15,7 @@ import json
 import aiosqlite
 import os
 import random
+import discord.embeds
 
 # Here we name the cog and create a new class for the cog.
 class Jumble(commands.Cog, name="jumble"):
@@ -45,8 +46,6 @@ class Jumble(commands.Cog, name="jumble"):
                     await context.send("user does not have last.fm account linked, please link with .link")
                 # user has account linked, we will now run the last.fm api logic
                 else:
-                    #print(albums)
-                    #print(len(albums['topalbums']['album']))
                     # TODO:
                     # 1.) turn response into navigable json
                     albums = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopalbums&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&format=json").json()
@@ -78,7 +77,18 @@ class Jumble(commands.Cog, name="jumble"):
                     result_string = ' '.join(shuffled_substrings).upper()
                     #print(f'shuffled: {result_string}')
 
-                    await context.send(result_string)
+                    # 7.) Create embed
+                    asdf = discord.Embed(
+                        title=f"```{result_string}```",
+                        description=f'''
+                        **Jumble - Guess the artist**
+                        **•**\tYou have **{playcount}** plays on this artist
+                        **•**\tThey are rank **{rank}** on your charts
+                        ''',
+                        type='rich',
+                        colour=0x3498db
+                    )
+                    await context.send(embed=asdf)
 
 
                     #print(albums.text)
