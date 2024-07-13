@@ -97,7 +97,7 @@ class Jumble(commands.Cog, name="jumble"):
                 else:
                     # TODO:
                     # 1.) turn response into navigable json
-                    artists = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopartists&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&format=json").json()
+                    artists = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopartists&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&limit=300&format=json").json()
                     albums = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopalbums&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&format=json").json()
                     albums_array = albums['topalbums']['album']
                     artists_array = artists['topartists']['artist']
