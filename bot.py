@@ -238,9 +238,6 @@ class DiscordBot(commands.Bot):
                         embed.set_footer(text=f"Answered in {whole_seconds}.{tenths:1f}".rstrip('0').rstrip('.'))
                         embed.color = discord.Color.green()
                         await message.channel.send(embed=embed)
-                        #embed.description += f"\n\nCongratulations {message.author.mention}, you guessed the word!"
-                        #await game_states[guild_id]['jumble_task']._coro.cr_frame.f_locals['message'].edit(embed=embed)
-
 
                     game_states.pop(guild_id, None)
                 else:

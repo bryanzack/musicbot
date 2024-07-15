@@ -35,7 +35,6 @@ async def jumble_timer(self,context:Context, guild_id, message:discord.Message,r
             embed.add_field(name='', value='', inline=False)
             embed.add_field(name='Add answer', value='Type your answer within 25 seconds to make a guess', inline=False)
             embed.add_field(name=f"Time's up! The correct word was **{game_states[guild_id]['current_word']}**", value='', inline=False)
-            #embed = message.embeds[0]
             await message.edit(embed=embed)
     except asyncio.CancelledError:
         pass
@@ -96,7 +95,6 @@ class Jumble(commands.Cog, name="jumble"):
             # check to see if command author's discord ID exists in sqlite3 database
             async with db.execute(f"SELECT * FROM User WHERE Discord_ID = {id}") as select_cursor:
                 select_rows = await select_cursor.fetchall()
-                print(select_rows)
                 # if user does not exist in database (zero matching records), tell user to link account
                 if (len(select_rows) == 0):
                     await context.send("user does not have last.fm account linked, please link with .link")
@@ -105,24 +103,18 @@ class Jumble(commands.Cog, name="jumble"):
                     # TODO:
                     # 1.) turn response into navigable json
                     artists = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopartists&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&limit=300&format=json").json()
-                    albums = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopalbums&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&format=json").json()
-                    albums_array = albums['topalbums']['album']
+                    #albums = requests.get(f"{os.getenv('API_ROOT')}/?method=user.gettopalbums&user={select_rows[0][1]}&api_key={os.getenv('LASTFM_KEY')}&format=json").json()
                     artists_array = artists['topartists']['artist']
                     
 
                     # 3.) get random album
                     rand = random.choice(artists_array)
-                    print(rand)
 
                     # 5.) deserialize relevant json key/values into variables
                     artist_name =  rand['name']
                     playcount = rand['playcount']
                     rank = rand['@attr']['rank']
-
                     print(f"artist: {artist_name}")
-                    #print(f"album: {album_name}")
-                    #print(f"playcount: {playcount}")
-                    #print(f"rank: {rank}")
 
                     # 6.) do shuffle logic
                     result_string = shuffleString(artist_name)
